@@ -50,7 +50,7 @@ class Corpus:
         # Split data into training and test sets.
         self.trainIdList, self.testIdList = train_test_split(range(self.totalSampleNum), test_size=testSize)
         self.trainSampleNum, self.testSampleNum = len(self.trainIdList), len(self.testIdList)
-        print("train pairs size: %d; test pairs size: %d" % (self.trainSampleNum, self.testSampleNum))
+        print(f"train pairs size: {self.trainSampleNum}; test pairs size: {self.testSampleNum}")
         self.testSize = testSize
         print("Finished loading corpus!")
 
