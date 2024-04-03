@@ -1,4 +1,8 @@
 # chatbot_finalproject
+## Some NOTES
+
+There are two branches in the repository now. The 'main' branch is what I used to complete the whole process(model training, testing, GUI integrated) . The other branch named 'word2vec' is a new start that follows your suggestion of creating a new file by employing the word2vec for embedding, I am still trying to integrate it into my original code more tests need to be done yet, so you can only see the completed word2vec preprocessing code (wv_preprocessing.py). I will upload the rest of the part code when I finish testing.
+
 ## Description
 
 The chatbot is a generative chatbot in mental stress field which utilizes a Seq2Seq with Luong attention mechanism to understand and respond to user input. 
