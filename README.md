@@ -1,7 +1,8 @@
 # chatbot_finalproject
 ## Some NOTES
 
-The repository now has two branches. The 'main' branch was used to complete the entire process, including model training, testing, and GUI integration. The 'word2vec' branch is a new start that follows your suggestion of creating a new file by employing word2vec for embedding. I am still working on integrating it into my original code, and more tests need to be done. Currently, only the completed word2vec preprocessing code (wv_preprocessing.py) is available. I will upload the remaining code once testing is complete.
+The repository now has two branches. The 'main' branch was used to complete the entire process, including model training, testing, and GUI integration. The 'word2vec' branch is a new start that follows your suggestion of creating a new file by employing word2vec for embedding. I am still working on integrating it into my original code, and more tests need to be done. 
+Currently, the integrated code (wv_preprocessing.py, wv_model.py) is still indebugging stage.
 
 ## Description
 
