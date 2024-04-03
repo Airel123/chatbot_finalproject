@@ -1,0 +1,149 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Nunito', sans-serif;
+    background-color: #F1F1F1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 聊天框基础样式 */
+.chatbox {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 350px;
+    height: 450px;
+    background-color: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 聊天框头部 */
+.chatbox__header {
+    height: 60px;
+    padding: 5px 10px;
+    background: linear-gradient(93.12deg, #455A64 0.52%, #607D8B 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.chatbox__heading--header {
+    font-size: 1.2rem;
+    margin-left: 10px;
+}
+
+.close-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* 消息区域 */
+.chatbox__messages {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: #f0f0f5;
+}
+
+.messages__item {
+    max-width: 70%;
+    padding: 8px 16px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    background-color: #E0E0E0;
+    word-wrap: break-word;
+}
+
+/* 用户消息 */
+.messages__item--operator {
+    margin-left: auto;
+    background-color: #DCF8C6;
+}
+
+/* 机器人消息 */
+.messages__item--visitor {
+    margin-right: auto;
+    background-color: #FFFFFF;
+}
+
+/* 聊天框底部 */
+.chatbox__footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    background: linear-gradient(268.91deg, #455A64 -2.14%, #607D8B 99.69%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0px -10px 15px rgba(0, 0, 0, 0.1);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.chatbox__footer input[type="text"] {
+    width: 80%;
+    padding: 10px;
+    border-radius: 30px;
+    border: none;
+    text-align: left;
+}
+
+.send__button {
+    background-color: #607D8B;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+/* 发送按钮和其他按钮的样式 */
+.chatbox__button button {
+    padding: 10px;
+    background: white;
+    border: none;
+    outline: none;
+    border-radius: 50%;
+    box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+
+.chatbox__thankyou-message {
+    font-size: 1.5rem;
+    color: #607D8B;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+
+.chatbox-centered {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
