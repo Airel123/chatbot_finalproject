@@ -3,6 +3,7 @@ pip install optuna
 
 //for model train/test
 pip install nltk
+pip install gensim
 
 //Frequently used commands
 python train.py  //for training
