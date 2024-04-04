@@ -9,7 +9,7 @@ os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 dataClass = Corpus("nocounsel.csv", maxSentenceWordsNum=100)
 
 # 指定模型和一些超参
-featureSize = 128
+featureSize = 100
 hiddenSize = 512
 encoderNumLayers = 3
 decoderNumLayers = 2
