@@ -66,6 +66,7 @@ class Corpus:
                                                              test_size=testSize)
         self.trainSampleNum, self.testSampleNum = len(self.trainIdList), len(self.testIdList)
         print(f"train pairs size: {self.trainSampleNum}; test pairs size: {self.testSampleNum}")
+        self.testSize = testSize
         print("Finished loading corpus!")
 
     # Resets mappings between words and IDs.
@@ -100,14 +101,14 @@ class Corpus:
             samples = idList[i * batchSize:(i + 1) * batchSize]
             QMaxLen, AMaxLen = max(self.QLens[samples]), max(self.ALens[samples])
             # Prepare question and answer data with padding.
-            QDataId = np.array([self.QChatDataId[i] + [eosToken] * (QMaxLen - self.QLens[i] ) for i in samples],
+            QDataId = np.array([self.QChatDataId[i] + [eosToken] * (QMaxLen - self.QLens[i]  ) for i in samples],
                                dtype='int32')
             ADataId = np.array([self.AChatDataId[i] + [eosToken] * (AMaxLen - self.ALens[i] ) for i in samples],
                                dtype='int32')
             yield QDataId, self.QLens[samples], ADataId, self.ALens[samples]
 
     def _QALens(self, data):
-        QLens, ALens = [len(qa[0]) + 1 for qa in data], [len(qa[1]) + 1 for qa in data]
+        QLens, ALens = [len(qa[0]) for qa in data], [len(qa[1]) for qa in data]
         QMaxLen, AMaxLen = max(QLens), max(ALens)
         print('QMAXLEN:', QMaxLen, '  AMAXLEN:', AMaxLen)
         self.QLens, self.ALens = np.array(QLens, dtype='int32'), np.array(ALens, dtype='int32')
