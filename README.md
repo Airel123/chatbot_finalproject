@@ -20,7 +20,7 @@ It is a custom dataset souced from three parts:
 
 Below is the organization and description of the files and directories within this project:
 
-- `app.py`: The Flask server that serves the chatbot's web interface.
+- `chat_app.py`: The Flask server that serves the chatbot's web interface.
 
 - `model.py`: Defines the chatbot model, including the architecture and the logic for processing and responding to user input.
 
@@ -28,15 +28,17 @@ Below is the organization and description of the files and directories within th
   
 - `preprocessing.py`: Prepares the input data for the chatbot, including text cleaning and word representing before it is passed to the model.
 
+- `postprocessing.py`: Addressing model output syntax issues to improve response accuracy and relevance.
+
 - `train.py`: Contains the code to train the chatbot model using training datasets.
 
 - `test.py`: Provides test cases to validate the functionality and performance of the chatbot, ensuring that the chat flows correctly and the model's responses are as expected.
 
-- `readme.txt`: This is a basic package setup guidence.
+- `requirement.txt`: This is a basic package setup guidence.
 
 - `static`: This directory is used to serve static files in a Flask application.
   - `images`: Images used in the chatbot's web interface.
-  - `app.js`: The JavaScript file.
+  - `chat_app.js`: The JavaScript file.
   - `chat_style.css`: The stylesheet.
 
 - `templates`: Contains HTML templates for the Flask application.
