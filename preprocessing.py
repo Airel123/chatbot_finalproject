@@ -2,9 +2,7 @@ import csv
 import re, nltk, random
 import numpy as np
 from sklearn.model_selection import train_test_split  # Split dataset into training and test sets
-from nltk.stem.porter import PorterStemmer
 
-stemmer = PorterStemmer()
 
 
 # Define a class to process and prepare dialogue data for machine learning models.
