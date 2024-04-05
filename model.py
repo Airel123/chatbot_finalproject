@@ -36,8 +36,7 @@ class EncoderRNN(nn.Module):
         lengths = lengths.to('cpu', dtype=torch.int64)
         # 加入paddle 方便计算
         packed = nn.utils.rnn.pack_padded_sequence(input, lengths, batch_first=True)
-        output, hn = self.gru(packed,
-                              hidden)  # output: batchSize × seq_len × hiddenSize*d; hn: numLayers*d × batchSize × hiddenSize
+        output, hn = self.gru(packed,hidden)  # output: batchSize × seq_len × hiddenSize*d; hn: numLayers*d × batchSize × hiddenSize
         output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         # 双向GRU
         output = output[:, :, :self.hiddenSize] + output[:, :, self.hiddenSize:]
@@ -175,7 +174,7 @@ class Seq2Seq:
                 if (e * itersPerEpoch + i + 1) % stopRound == 0:
                     bleu = _bleu_score(self.encoderRNN, self.decoderRNN, X, XLens, Y, YLens, self.dataClass.maxSentLen,
                                        device=self.device)
-                    print(f"After iters {e * itersPerEpoch + i + 1}: loss = {loss:.3lf}; train bleu: {bleu:.3lf}; ",
+                    print(f"After iters {e * itersPerEpoch + i + 1}: loss = {loss:.3f}; train bleu: {bleu:.3f}; ",
                           end='')
 
                     if self.dataClass.testSize > 0:
@@ -391,25 +390,25 @@ def _calculate_loss(encoderRNN, decoderRNN, X, XLens, Y, YLens, teacherForcingRa
     d = 2
     hidden = torch.zeros((d * encoderRNN.numLayers, batchSize, hiddenSize), dtype=torch.float32, device=device)
 
-    # # Sort X in descending order of lengths for pack_padded_sequence
-    # XLens, indices = torch.sort(XLens, descending=True)
-    # _, desortedIndices = torch.sort(indices, descending=False)
-    # # Encoder forward pass
-    # encoderOutput, hidden = encoderRNN(X[indices], XLens, hidden)
-    # encoderOutput, hidden = encoderOutput[desortedIndices], hidden[-d * decoderRNN.numLayers::2, desortedIndices, :]
-    # # Prepare the decoder input starting with sosToken for each sequence in the batch
-    # decoderInput = torch.tensor([[sosToken] for i in range(batchSize)], dtype=torch.long, device=device)
-    # loss, nTotal = 0, 0
-
     # Sort X in descending order of lengths for pack_padded_sequence
     XLens, indices = torch.sort(XLens, descending=True)
-    X, Y = X[indices], Y[indices]  # Reorder X and Y according to XLens
-
+    _, desortedIndices = torch.sort(indices, descending=False)
     # Encoder forward pass
-    encoderOutput, hidden = encoderRNN(X, XLens, hidden)
+    encoderOutput, hidden = encoderRNN(X[indices], XLens, hidden)
+    encoderOutput, hidden = encoderOutput[desortedIndices], hidden[-d * decoderRNN.numLayers::2, desortedIndices, :]
     # Prepare the decoder input starting with sosToken for each sequence in the batch
-    decoderInput = torch.tensor([[sosToken]] * batchSize, dtype=torch.long, device=device)
-    loss, nTotal = 0, 0  # Initialize loss and total count
+    decoderInput = torch.tensor([[sosToken] for i in range(batchSize)], dtype=torch.long, device=device)
+    loss, nTotal = 0, 0
+
+    # Sort X in descending order of lengths for pack_padded_sequence
+    # XLens, indices = torch.sort(XLens, descending=True)
+    # X, Y = X[indices], Y[indices]  # Reorder X and Y according to XLens
+    #
+    # # Encoder forward pass
+    # encoderOutput, hidden = encoderRNN(X, XLens, hidden)
+    # # Prepare the decoder input starting with sosToken for each sequence in the batch
+    # decoderInput = torch.tensor([[sosToken]] * batchSize, dtype=torch.long, device=device)
+    # loss, nTotal = 0, 0  # Initialize loss and total count
 
     for i in range(YSeqLen):  # 遍历  对于每个decoder的中，都会取top，并计算loss，训练过程中对比训练数据和真实数据之间的差
         # decoderOutput: batchSize × 1 × outputSize
