@@ -20,19 +20,24 @@ body, html {
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 350px;
-    height: 450px;
-    background-color: #f9f9f9;
+    width: 550px;
+
+    /*height: 450px;*/
+    /*min-height: 450px;*/
+
+    /*background-color: #6c1f1f;*/
     border-radius: 20px;
     box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+
 }
 
 /* 聊天框头部 */
 .chatbox__header {
     height: 60px;
     padding: 5px 10px;
-    background: linear-gradient(93.12deg, #455A64 0.52%, #607D8B 100%);
+    /*background: linear-gradient(93.12deg, #455A64 0.52%, #607D8B 100%);*/
+    background:linear-gradient(93.12deg, #581B98 0.52%, #9C1DE7 100%);
     color: white;
     display: flex;
     align-items: center;
@@ -47,26 +52,39 @@ body, html {
     margin-left: 10px;
 }
 
+
 .close-btn {
-    margin-left: auto;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
+    background-image: url('../static/images/close.png'); /* 设置背景图片 */
+    background-size: cover;
+    background-color: transparent; /* 背景颜色透明 */
+    background-repeat: no-repeat; /* 图片不重复 */
+    background-position: center; /* 图片居中 */
+    width: 40px; /* 设置宽度，根据你的图片大小调整 */
+    height: 40px; /* 设置高度，根据你的图片大小调整 */
+    border: none; /* 无边框 */
+    margin-left: auto; /* 左边距自动，通常用来对齐元素到容器的右边 */
+    cursor: pointer; /* 鼠标指针 */
+    display: inline-block; /* 设置为行内块元素，便于控制宽高 */
+    padding: 0; /* 无内边距 */
 }
+
 
 /* 消息区域 */
 .chatbox__messages {
+    /*height: calc(100% - 60px - 20px - 20px);*/
     height: 400px;
+    padding: 20px 10px 80px;
+    /*height: 400px;*/
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    background-color: #f0f0f5;
+    overflow-y: scroll;
+    background-color: #ffffff;
 }
 
 .messages__item {
-    max-width: 70%;
+    /*max-width: 70%;*/
+    max-width: 60.6%;
+    width: fit-content;
     padding: 8px 16px;
     border-radius: 18px;
     margin-bottom: 10px;
@@ -77,13 +95,14 @@ body, html {
 /* 用户消息 */
 .messages__item--operator {
     margin-left: auto;
-    background-color: #DCF8C6;
+    background-color: #d1dbe4;
 }
 
 /* 机器人消息 */
 .messages__item--visitor {
     margin-right: auto;
-    background-color: #FFFFFF;
+    background-color: #cbb3e5;
+    color: white;
 }
 
 /* 聊天框底部 */
@@ -92,8 +111,10 @@ body, html {
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 10px 20px;
-    background: linear-gradient(268.91deg, #455A64 -2.14%, #607D8B 99.69%);
+    /*padding: 10px 20px;*/
+    padding: 15px 15px;
+    /*background: linear-gradient(268.91deg, #455A64 -2.14%, #607D8B 99.69%);*/
+    background: linear-gradient(268.91deg, #581B98 -2.14%, #9C1DE7 99.69%);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -103,21 +124,32 @@ body, html {
 }
 
 .chatbox__footer input[type="text"] {
-    width: 80%;
-    padding: 10px;
+    width: 90%;
+    /*padding: 10px;*/
+    padding: 10px 10px;
     border-radius: 30px;
     border: none;
     text-align: left;
 }
 
 .send__button {
-    background-color: #607D8B;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 30px;
-    cursor: pointer;
+    background-image: url('../static/images/send.png'); /* 图片路径 */
+    background-size: cover; /* 覆盖整个按钮 */
+    background-repeat: no-repeat; /* 不重复图片 */
+    background-position: center; /* 图片居中 */
+    background-color: transparent; /* 透明背景颜色 */
+    width: 30px; /* 固定宽度，根据实际需要调整 */
+    height: 30px; /* 固定高度，根据实际需要调整 */
+    color: transparent; /* 文本透明 */
+    border: none; /* 无边框 */
+    padding: 0; /* 无内边距 */
+    border-radius: 50%; /* 圆形按钮，如果需要的话 */
+    cursor: pointer; /* 鼠标指针 */
+    display: flex; /* 使用Flex布局使内容居中 */
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
 }
+
 
 /* 发送按钮和其他按钮的样式 */
 .chatbox__button button {
@@ -133,6 +165,7 @@ body, html {
 
 .chatbox__thankyou-message {
     font-size: 1.5rem;
+    /*background: white;*/
     color: #607D8B;
     padding: 20px;
     border-radius: 20px;
@@ -140,10 +173,19 @@ body, html {
 
 
 .chatbox-centered {
+    background: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
 }
+
+.chat-icon{
+    width: 8%;
+    height: auto;
+}
+
+
+
 
