@@ -44,20 +44,9 @@ def get_response(inputSeq):
 
 def postprocessing(user_input, bot_output):
     try:
-        instructions = (
-            "Imagine you are an assistant whose role is to support a chatbot designed for student interactions, "
-            "with a focus on mental health and stress among other topics. Your task is to evaluate the conversation "
-            "based on the user input"
-            "and the chatbot's predicted output. You should judge the conversation's relevance and realism. "
-            "If the dialogue is something that can happen in reality and makes sense within the context of a "
-            "student's life,"
-            "including but not limited to mental health and stress, correct any grammatical errors in the chatbot's "
-            "response,"
-            "adjust casing where appropriate, add necessary punctuation, and ensure the response is accurate and "
-            "sounds natural."
-            "If the conversation does not make sense or could not realistically occur, return '0'."
-        )
-
+        instructions = ("Your task is to correct grammatical errors in the chatbot's replies, making minimal "
+                        "improvements to make the sentences sound without changing their original meaning. If the "
+                        "dialogue does not make sense, return '0'")
         response = client.chat.completions.create(
             model=MODEL,
             messages=[
@@ -84,6 +73,7 @@ def postprocessing(user_input, bot_output):
             # 如果被标记为'0'，依然记录对话，但状态为"Unrealistic"
             log_dialogue(user_input, bot_output, corrected_text)
             # 可以选择返回原始bot输出
+            bot_output = "Sorry, i didn't understand. Could you rephrase or give me a bit more detail? I'm here to help! 🌟"
             return bot_output
         else:
             print("User input is related, and the bot's response has been adjusted.")
