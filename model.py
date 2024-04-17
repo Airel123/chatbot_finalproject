@@ -6,7 +6,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import time
 import pandas as pd
 from preprocessing import *
-from postprocessing import postprocessing
+from postprocessing_grammarbot import postprocessing
 
 # 定义开始符和结束符
 sosToken = 1
@@ -359,38 +359,41 @@ class ChatBot:
         totalSamplesNum = dataClass.testSampleNum
         print("total testSamplesNum", totalSamplesNum)
         iters, nTotal = 0, 0
+        times = 0
         for X, XLens, Y, YLens in dataStream:
             for i in range(len(X)):
                 # 将X（用户输入）转换为文本
                 user_input_text = ' '.join([self.id2word[id] for id in X[i] if id != eosToken])
-                Y_pre = _calculate_Y_pre(self.encoderRNN, self.decoderRNN, X, XLens, Y, dataClass.maxSentLen, teacherForcingRatio=0, device=self.device)
-                predicted_text = ' '.join([self.id2word[id] for id in Y_pre if id != eosToken])
-                # 应用后处理函数
-                postprocessed_text = postprocessing(user_input_text, predicted_text)
-                postprocessed_text = filter_sent(postprocessed_text)
-                # 将真实标签（Y）转换为文本，用于计算BLEU分数和损失
-                true_text = ' '.join([self.id2word[id] for id in Y[i] if id != eosToken])
-
-                # 计算BLEU分数
-                reference = [true_text.split()]  # 真实输出
-                candidate = postprocessed_text.split()  # 后处理后的预测输出
-                bleu_score = sentence_bleu(reference, candidate, smoothing_function=SmoothingFunction().method1)
-                bleuScore += bleu_score
-
-                # 计算损失
-
+                Y_pre = _calculate_Y_pre(self.encoderRNN, self.decoderRNN, X, XLens, Y, dataClass.maxSentLen,
+                                         teacherForcingRatio=0, device=self.device)
+                Y_pre = Y_pre.cpu().data.numpy()
+                Y_preLens = [list(i).index(0) if 0 in i else len(i) for i in Y_pre]
+                Y_pre = [list(Y_pre[i])[:Y_preLens[i]] for i in range(len(Y_preLens))]
+                for i in range(len(Y_pre)):
+                    # Process each sequence separately
+                    predicted_text = ' '.join([self.id2word[id] for id in Y_pre[i] if id != eosToken])
+                    # predicted_text = ' '.join([self.id2word[id] for id in Y_pre if id != eosToken])
+                    # 应用后处理函数
+                    # postprocessed_text = postprocessing(user_input_text, predicted_text)
+                    postprocessed_text = postprocessing(predicted_text)
+                    postprocessed_text = filter_sent(postprocessed_text)
+                    # 将真实标签（Y）转换为文本，用于计算BLEU分数和损失
+                    true_text = ' '.join([self.id2word[id] for id in Y[i] if id != eosToken])
+                    # 计算BLEU分数
+                    reference = [true_text.split()]  # 真实输出
+                    candidate = postprocessed_text.split()  # 后处理后的预测输出
+                    bleu_score = sentence_bleu(reference, candidate, smoothing_function=SmoothingFunction().method1)
+                    times = times + 1
+                    bleuScore += bleu_score
 
             iters += len(X)
-            # total_samples += len(X) total_samples
-
-        avg_bleu_score = bleuScore / totalSamplesNum
-        # avg_loss = total_loss / total_samples
-        avg_loss = 0
+            
+        avg_bleu_score = bleuScore / times
 
         print(f'Average BLEU score after post: {avg_bleu_score:.4f}')
-        print(f'Average loss after post: {avg_loss:.4f}')
 
-        return avg_bleu_score, avg_loss
+
+        return avg_bleu_score
 
 
 def random_pick(sample, prob):  # 随机pick一个prob比较大的，根据给定的概率从一系列样本中进行加权随机选择
