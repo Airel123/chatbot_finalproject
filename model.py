@@ -6,6 +6,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import time
 import pandas as pd
 from preprocessing import *
+from postprocessing import postprocessing
 
 # 定义开始符和结束符
 sosToken = 1
@@ -157,10 +158,10 @@ class Seq2Seq:
                                            weight_decay=weight_decay)
         decoderOptimzer = torch.optim.Adam(self.decoderRNN.parameters(), lr=lr, betas=betas, eps=eps,
                                            weight_decay=weight_decay)
-        # Prepare testing stream
+        # Prepare validation stream
         if self.dataClass.testSize > 0:
-            testStrem = self.dataClass.random_batch_data_stream(batchSize=batchSize, type='test')
-
+            # testStrem = self.dataClass.random_batch_data_stream(batchSize=batchSize, type='test')
+                validStream = self.dataClass.random_batch_data_stream(batchSize=batchSize, type='validation')
         itersPerEpoch = self.dataClass.trainSampleNum // batchSize
         st = time.time()  # Start time for training
 
@@ -178,10 +179,11 @@ class Seq2Seq:
                           end='')
 
                     if self.dataClass.testSize > 0:
-                        X, XLens, Y, YLens = next(testStrem)
+                        # X, XLens, Y, YLens = next(testStrem)
+                        X, XLens, Y, YLens = next(validStream)
                         bleu = _bleu_score(self.encoderRNN, self.decoderRNN, X, XLens, Y, YLens,
                                            self.dataClass.maxSentLen, device=self.device)
-                        print(f'test bleu: {bleu:.3f}')
+                        print(f'validation bleu: {bleu:.3f}')
 
     # save model
     def save(self, path):
@@ -319,13 +321,15 @@ class ChatBot:
                     print(i)
             return ansAndProb[0][0]
 
-    def evaluate(self, dataClass, batchSize=128, streamType='train'):
+    def evaluate(self, dataClass, batchSize=128, streamType='test'):
         # Update word-id mappings in the dataClass with the current model's vocabulary
         dataClass.reset_word_id_map(self.id2word, self.word2id)
         # Retrieve a data stream
         dataStream = dataClass.one_epoch_data_stream(batchSize=batchSize, type=streamType)
         bleuScore, totalLoss = 0.0, 0.0
-        totalSamplesNum = dataClass.trainSampleNum if streamType == 'train' else dataClass.testSampleNum
+        # totalSamplesNum = dataClass.trainSampleNum if streamType == 'train' else dataClass.testSampleNum
+        totalSamplesNum = dataClass.testSampleNum
+        print("total testSamplesNum", totalSamplesNum)
         iters, nTotal = 0, 0
         while True:
             try:
@@ -348,6 +352,46 @@ class ChatBot:
         print(f'Evaluation completed: Avg BLEU Score = {avgBleuScore:.4f}, Avg Loss = {avgLoss:.4f}')
         return avgBleuScore, avgLoss
 
+    def evaluate_with_postprocessing(self, dataClass, batchSize=128, streamType='test'):
+        dataStream = dataClass.one_epoch_data_stream(batchSize=batchSize, type=streamType)
+        bleuScore, totalLoss = 0.0, 0.0
+        # totalSamplesNum = dataClass.trainSampleNum if streamType == 'train' else dataClass.testSampleNum
+        totalSamplesNum = dataClass.testSampleNum
+        print("total testSamplesNum", totalSamplesNum)
+        iters, nTotal = 0, 0
+        for X, XLens, Y, YLens in dataStream:
+            for i in range(len(X)):
+                # 将X（用户输入）转换为文本
+                user_input_text = ' '.join([self.id2word[id] for id in X[i] if id != eosToken])
+                Y_pre = _calculate_Y_pre(self.encoderRNN, self.decoderRNN, X, XLens, Y, dataClass.maxSentLen, teacherForcingRatio=0, device=self.device)
+                predicted_text = ' '.join([self.id2word[id] for id in Y_pre if id != eosToken])
+                # 应用后处理函数
+                postprocessed_text = postprocessing(user_input_text, predicted_text)
+                postprocessed_text = filter_sent(postprocessed_text)
+                # 将真实标签（Y）转换为文本，用于计算BLEU分数和损失
+                true_text = ' '.join([self.id2word[id] for id in Y[i] if id != eosToken])
+
+                # 计算BLEU分数
+                reference = [true_text.split()]  # 真实输出
+                candidate = postprocessed_text.split()  # 后处理后的预测输出
+                bleu_score = sentence_bleu(reference, candidate, smoothing_function=SmoothingFunction().method1)
+                bleuScore += bleu_score
+
+                # 计算损失
+
+
+            iters += len(X)
+            # total_samples += len(X) total_samples
+
+        avg_bleu_score = bleuScore / totalSamplesNum
+        # avg_loss = total_loss / total_samples
+        avg_loss = 0
+
+        print(f'Average BLEU score after post: {avg_bleu_score:.4f}')
+        print(f'Average loss after post: {avg_loss:.4f}')
+
+        return avg_bleu_score, avg_loss
+
 
 def random_pick(sample, prob):  # 随机pick一个prob比较大的，根据给定的概率从一系列样本中进行加权随机选择
     x = random.uniform(0, 1)
@@ -360,19 +404,24 @@ def random_pick(sample, prob):  # 随机pick一个prob比较大的，根据给�
 
 
 def _bleu_score(encoderRNN, decoderRNN, X, XLens, Y, YLens, maxSentLen, device):
+
     Y_pre = _calculate_Y_pre(encoderRNN, decoderRNN, X, XLens, Y, maxSentLen, teacherForcingRatio=0, device=device)
     Y = [list(Y[i])[:YLens[i] - 1] for i in range(len(YLens))]
     Y_pre = Y_pre.cpu().data.numpy()
     Y_preLens = [list(i).index(0) if 0 in i else len(i) for i in Y_pre]
     Y_pre = [list(Y_pre[i])[:Y_preLens[i]] for i in range(len(Y_preLens))]
 
+
     # 使用平滑函数
     smoothie = SmoothingFunction().method1
     # `weights` defines equal importance (0.25 each) to the 1-gram, 2-gram, 3-gram, and 4-gram matchings,
     # which means it considers the match of single words up to sequences of 4 words in scoring the translation.
+
     bleuScore = [sentence_bleu([i], j, weights=(0.25, 0.25, 0.25, 0.25), smoothing_function=smoothie) for i, j in
                  zip(Y, Y_pre)]
     return np.mean(bleuScore)
+
+
 
 
 # 计算loss
@@ -399,16 +448,6 @@ def _calculate_loss(encoderRNN, decoderRNN, X, XLens, Y, YLens, teacherForcingRa
     # Prepare the decoder input starting with sosToken for each sequence in the batch
     decoderInput = torch.tensor([[sosToken] for i in range(batchSize)], dtype=torch.long, device=device)
     loss, nTotal = 0, 0
-
-    # Sort X in descending order of lengths for pack_padded_sequence
-    # XLens, indices = torch.sort(XLens, descending=True)
-    # X, Y = X[indices], Y[indices]  # Reorder X and Y according to XLens
-    #
-    # # Encoder forward pass
-    # encoderOutput, hidden = encoderRNN(X, XLens, hidden)
-    # # Prepare the decoder input starting with sosToken for each sequence in the batch
-    # decoderInput = torch.tensor([[sosToken]] * batchSize, dtype=torch.long, device=device)
-    # loss, nTotal = 0, 0  # Initialize loss and total count
 
     for i in range(YSeqLen):  # 遍历  对于每个decoder的中，都会取top，并计算loss，训练过程中对比训练数据和真实数据之间的差
         # decoderOutput: batchSize × 1 × outputSize
@@ -484,4 +523,40 @@ def _calculate_Y_pre(encoderRNN, decoderRNN, X, XLens, Y, YMaxLen, teacherForcin
         # Exit loop if all sequences have ended
         if len(localRestId) < 1:
             break
+    return Y_pre
+
+
+def predict(encoderRNN, decoderRNN, X, XLens, YMaxLen, sosToken, eosToken, device):
+    featureSize, hiddenSize = encoderRNN.featureSize, encoderRNN.hiddenSize
+
+    # 处理单个输入序列，所以batchSize为1
+    X = torch.tensor(X, dtype=torch.long, device=device).unsqueeze(0)  # 给定输入，增加一个batch维度
+    XLens = torch.tensor([XLens], dtype=torch.int, device=device)
+
+    # 初始化encoder输出
+    encoderOutput = torch.zeros((1, XLens.item(), featureSize), dtype=torch.float32, device=device)
+    # 初始化隐藏状态
+    hidden = torch.zeros((2 * encoderRNN.numLayers, 1, hiddenSize), dtype=torch.float32, device=device)
+
+    # Encode input sequence
+    encoderOutput, hidden = encoderRNN(X, XLens, hidden)
+
+    # Prepare for decoding
+    decoderInput = torch.tensor([[sosToken]], dtype=torch.long, device=device)  # 开始符
+    Y_pre = []  # 用于存储预测输出序列的ID
+
+    # Decode sequence
+    for i in range(YMaxLen):
+        decoderOutput, hidden, _ = decoderRNN(decoderInput, hidden, encoderOutput)
+        topv, topi = decoderOutput.topk(1)  # 获取最可能的下一个词ID
+        nextWordId = topi.item()
+
+        if nextWordId == eosToken:  # 如果遇到结束符，则停止预测
+            break
+
+        Y_pre.append(nextWordId)  # 将预测的词ID添加到输出序列中
+
+        # 更新decoder的输入为当前预测的词ID
+        decoderInput = topi.squeeze().detach()
+
     return Y_pre
