@@ -24,10 +24,14 @@ class Corpus:
                     print(f"Skipped a line with unexpected number of columns: {row}")
 
         # Tokenize and pair up questions and answers if they are under the word limit.
-        tokenized_patterns = [tokenize(sentence) for sentence in cleaned_patterns]
-        tokenized_responses = [tokenize(sentence) for sentence in cleaned_responses]
-        data = [(p, r) for p, r in zip(tokenized_patterns, tokenized_responses) if
-                len(p) < maxSentenceWordsNum and len(r) < maxSentenceWordsNum]
+        # tokenized_patterns = [tokenize(sentence) for sentence in cleaned_patterns]
+        # tokenized_responses = [tokenize(sentence) for sentence in cleaned_responses]
+        # data = [(p, r) for p, r in zip(tokenized_patterns, tokenized_responses) if
+        #         len(p) < maxSentenceWordsNum and len(r) < maxSentenceWordsNum]
+
+        tokenized_patterns = [tokenize(sentence)[:maxSentenceWordsNum] for sentence in cleaned_patterns]
+        tokenized_responses = [tokenize(sentence)[:maxSentenceWordsNum] for sentence in cleaned_responses]
+        data = list(zip(tokenized_patterns, tokenized_responses))
 
         self.chatDataWord = data
         self._word_id_map(data)  # Map words to IDs and vice versa
@@ -45,10 +49,18 @@ class Corpus:
         self.QChatDataId, self.AChatDataId = zip(*[(qa[0], qa[1]) for qa in chatDataId])
         self.totalSampleNum = len(data)
         print("Total qa pairs num:", self.totalSampleNum)
+
         # Split data into training and test sets.
         self.trainIdList, self.testIdList = train_test_split(range(self.totalSampleNum), test_size=testSize)
+        # Split training data into training and validation sets.
+        validationSize = 0.1765  # 大约17.65%，从剩余的85%数据中分出来作为验证集
+        new_trainIdList, validationIdList = train_test_split(self.trainIdList, test_size=validationSize)
+        self.trainIdList = new_trainIdList
+        self.validationIdList = validationIdList
+
         self.trainSampleNum, self.testSampleNum = len(self.trainIdList), len(self.testIdList)
-        print(f"train pairs size: {self.trainSampleNum}; test pairs size: {self.testSampleNum}")
+        self.validationSampleNum = len(self.validationIdList)
+        print(f"train pairs size: {self.trainSampleNum}; validation pairs size: {self.validationSampleNum}; test pairs size: {self.testSampleNum}")
         self.testSize = testSize
         print("Finished loading corpus!")
 
@@ -62,7 +74,15 @@ class Corpus:
 
     # Generates a random batch of data for training or testing.
     def random_batch_data_stream(self, batchSize=128, type='train'):
-        idList = self.trainIdList if type == 'train' else self.testIdList
+        # idList = self.trainIdList if type == 'train' else self.testIdList
+        # idList = self.trainIdList if type == 'train' else self.validationIdList
+        if type == 'train':
+            idList = self.trainIdList
+        elif type == 'test':
+            idList = self.testIdList
+        elif type == 'validation':
+            idList = self.validationIdList
+
         eosToken, unkToken = self.word2id['<EOS>'], self.word2id['<UNK>']
         while True:
             # Select a random subset of data for the batch.
@@ -77,7 +97,14 @@ class Corpus:
 
     # Provides data for a complete epoch, used in evaluating the model.
     def one_epoch_data_stream(self, batchSize=128, type='train'):
-        idList = self.trainIdList if type == 'train' else self.testIdList
+        # idList = self.trainIdList if type == 'train' else self.testIdList
+        if type == 'train':
+            idList = self.trainIdList
+        elif type == 'test':
+            idList = self.testIdList
+        elif type == 'validation':
+            idList = self.validationIdList
+
         eosToken = self.word2id['<EOS>']
         for i in range((len(idList) + batchSize - 1) // batchSize):
             # Slice data for current batch.
